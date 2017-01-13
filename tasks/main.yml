@@ -1,0 +1,43 @@
+---
+- name: Checking epel-release installation status
+  command: rpm -q epel-release
+  ignore_errors: true
+  register: epel_installed
+
+
+- block:
+  - name: "Downloading {{ epel_release_file }}"
+    get_url:
+      url: "{{ epel_release_url }}"
+      dest: /tmp/
+      mode: 644
+
+  - name: "Installing {{ epel_release_file }}"
+    yum: name="/tmp/{{ epel_release_file }}" state=latest disable_gpg_check=yes
+
+  - name: "Deleting downloaded {{ epel_release_file }}"
+    file: path="/tmp/{{ epel_release_file }}" state=absent
+
+  when: "{{ epel_installed.rc != 0 }}"
+
+
+- name: "{{ epel_enabled | ternary('Enabling', 'Disabling') }} EPEL stable repository"
+  ini_file:
+    dest: /etc/yum.repos.d/epel.repo
+    section: epel
+    option: enabled
+    value: "{{ epel_enabled | ternary(1, 0) }}"
+
+
+- name: "{{ epel_testing_enabled | ternary('Enabling', 'Disabling') }} EPEL testing repository"
+  ini_file:
+    dest: /etc/yum.repos.d/epel-testing.repo
+    section: epel-testing
+    option: enabled
+    value: "{{ epel_testing_enabled | ternary(1, 0) }}"
+
+
+- name: Importing EPEL GPG key to the RPM database
+  rpm_key:
+    key: "{{ epel_gpg_key_url }}"
+    state: present
