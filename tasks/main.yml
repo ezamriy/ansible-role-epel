@@ -18,8 +18,13 @@
   - name: "Deleting downloaded {{ epel_release_file }}"
     file: path="/tmp/{{ epel_release_file }}" state=absent
 
-  when: "{{ epel_installed.rc != 0 }}"
+  when: "{{ epel_installed.rc != 0 and ansible_distribution_major_version == '5' }}"
 
+- name: Installing epel-release with yum directly
+  yum:
+    name: "{{ epel_release_url }}"
+    state: present
+  when: "{{ epel_installed.rc != 0 and ansible_distribution_major_version != '5' }}"
 
 - name: "{{ epel_enabled | ternary('Enabling', 'Disabling') }} EPEL stable repository"
   ini_file:
