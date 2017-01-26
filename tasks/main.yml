@@ -20,7 +20,7 @@
 
   when: "{{ epel_installed.rc != 0 and ansible_distribution_major_version == '5' }}"
 
-- name: Installing epel-release with yum directly
+- name: Installing epel-release
   yum:
     name: "{{ epel_release_url }}"
     state: present
